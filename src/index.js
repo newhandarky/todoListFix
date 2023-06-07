@@ -8,15 +8,16 @@ const tabs = document.querySelector(".tab");
 const notOver = document.querySelector("p");
 const list_footer = document.querySelector(".list_footer");
 
-let todoArray = [];
+const todoArray = [];
 
 // 新增待辦事項點擊事件
 btn_add.addEventListener("click", function (e) {
-    let todoObject = {
+    const todoObject = {
         isOver: false,
         inputValue: ""
     };
 
+    // 判斷輸入事項欄位是否為空值
     if (input.value.trim() === "") {
         Swal.fire("請輸入待辦事項");
         return;
@@ -25,6 +26,13 @@ btn_add.addEventListener("click", function (e) {
         todoArray.push(todoObject);
         showLists(todoArray);
     };
+
+    // 新增完事件後回到"全部"以檢視內容的變更
+    const activeTeb = document.querySelector(".active");
+    if (activeTeb.innerText !== "全部") {
+        activeTeb.classList.remove("active");
+        tabs.children[0].setAttribute("class", "active");
+    }
     input.value = "";
 });
 
@@ -34,50 +42,17 @@ let showLists = function (lists) {
     let isOverCount = 0;
 
     lists.forEach(function (item, index) {
-        if (item.isOver == true) {
-            // tabs在"待完成"之下新增不會顯示已完成的項目
-            if (document.querySelector(".active").innerHTML == "待完成") {
-                str += ` <li class=showTodo>
-                <label class="checkbox" for="">
-                <input type="checkbox" data-inputIndex="${index}" checked/>
-                <span>${item.inputValue}</span>
-                </label>
-                <a href="#" data-deleteIndex="${index}" class="delete"></a>
-                </li>`;
-            } else {
-                str += ` <li>
-                <label class="checkbox" for="">
-                <input type="checkbox" data-inputIndex="${index}" checked/>
-                <span>${item.inputValue}</span>
-                </label>
-                <a href="#" data-deleteIndex="${index}" class="delete"></a>
-                </li>`;
-            }
-        } else {
-            // tabs在"已完成"之下新增不會顯示待完成的項目
-            if (document.querySelector(".active").innerHTML == "已完成") {
-                str += ` <li class="showTodo">
-                <label class="checkbox" for="">
-                <input type="checkbox" data-inputIndex="${index}"/>
-                <span>${item.inputValue}</span>
-                </label>
-                <a href="#" data-deleteIndex="${index}" class="delete"></a>
-                </li>`;
-                isOverCount++;
-            } else {
-                str += ` <li>
-                <label class="checkbox" for="">
-                <input type="checkbox" data-inputIndex="${index}"/>
-                <span>${item.inputValue}</span>
-                </label>
-                <a href="#" data-deleteIndex="${index}" class="delete"></a>
-                </li>`;
-                isOverCount++;
-            }
+        if (item.isOver !== true) {
+            isOverCount++;
         }
+        str += ` <li>
+                    <label class="checkbox" for="">
+                    <input type="checkbox" data-inputIndex="${index}" ${item.isOver ? "checked" : ""}/>
+                    <span>${item.inputValue}</span>
+                    </label>
+                    <a href="#" data-deleteIndex="${index}" class="delete"></a>
+                </li>`;
     });
-
-
     list.innerHTML = str;
     notOver.innerHTML = `${isOverCount} 個待完成項目`;
 }
@@ -91,27 +66,21 @@ tabs.addEventListener("click", function (e) {
             e.target.classList.toggle("active");
         }
     }
+})
 
-    // teb顯示切換
+// teb顯示切換
+tabs.addEventListener("click", function (e) {
     if (e.target.innerHTML === "全部") {
         document.querySelectorAll(".showTodo").forEach(function (item) {
             item.setAttribute("class", "");
         })
     } else if (e.target.innerHTML === "待完成") {
         todoArray.forEach(function (item, index) {
-            if (item.isOver == false) {
-                list.children[index].setAttribute("class", "");
-            } else {
-                list.children[index].setAttribute("class", "showTodo");
-            }
+            item.isOver ? list.children[index].setAttribute("class", "showTodo") : list.children[index].setAttribute("class", "")
         })
     } else if (e.target.innerHTML === "已完成") {
         todoArray.forEach(function (item, index) {
-            if (item.isOver == true) {
-                list.children[index].setAttribute("class", "");
-            } else {
-                list.children[index].setAttribute("class", "showTodo");
-            }
+            item.isOver ? list.children[index].setAttribute("class", "") : list.children[index].setAttribute("class", "showTodo")
         })
     }
 });
@@ -120,14 +89,10 @@ tabs.addEventListener("click", function (e) {
 list.addEventListener("click", function (e) {
     if (e.target.nodeName === "INPUT") {
         let overTodoNum = e.target.getAttribute("data-inputIndex");
-        let isOverCount = 0;
         // 切換isOver狀態, 確認是否完成事項
         todoArray[overTodoNum].isOver = !todoArray[overTodoNum].isOver;
-        todoArray.forEach(function (item) {
-            if (item.isOver == false) {
-                isOverCount++;
-            }
-        })
+        // 取得尚未完成數量
+        let isOverCount = todoArray.filter(todo => !todo.isOver).length;
         notOver.innerHTML = `${isOverCount} 個待完成項目`;
 
         // teb在待完成或是已完成的狀態下修改狀態同時修改隱藏顯示
@@ -156,15 +121,18 @@ list.addEventListener("click", function (e) {
                     Swal.fire('完成事項已刪除', '', 'success')
                     todoArray.splice(deleteInex, 1);
                     showLists(todoArray);
-                } 
+                }
             })
         }
     }
 })
 
+
+
+
+
 // 刪除全部事項
 list_footer.addEventListener("click", function (e) {
-    console.log(e.target.nodeName);
     let deleteArr = [];
     if (e.target.nodeName == "A") {
         todoArray.forEach(function (item, index) {
@@ -173,9 +141,9 @@ list_footer.addEventListener("click", function (e) {
             }
         });
         // 確認是否有已完成事項
-        if(deleteArr.length == 0){
+        if (deleteArr.length == 0) {
             Swal.fire("目前尚未有已完成事項");
-        }else{
+        } else {
             Swal.fire({
                 title: '您確定要刪除全部已完成事項嗎?',
                 showCancelButton: true,
@@ -189,7 +157,7 @@ list_footer.addEventListener("click", function (e) {
                     })
                     showLists(todoArray);
                     Swal.fire('完成事項皆已刪除', '', 'success')
-                } 
+                }
             })
         }
     }
