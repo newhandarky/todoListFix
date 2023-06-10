@@ -1,4 +1,4 @@
 # todoListFix
 
-修正前如下
-https://codepen.io/atsushi-amuro/pen/OJBYyYP
+原始題目
+https://codepen.io/hexschool/pen/KKmvpPP
