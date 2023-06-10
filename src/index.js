@@ -7,16 +7,16 @@ const list = document.querySelector(".list");
 const tabs = document.querySelector(".tab");
 const notOver = document.querySelector("p");
 const list_footer = document.querySelector(".list_footer");
-
+// 建立準備儲存待辦事項的陣列
 const todoArray = [];
 
 // 新增待辦事項點擊事件
 btn_add.addEventListener("click", function (e) {
+    // 自訂待辦事項內容
     const todoObject = {
         isOver: false,
         inputValue: ""
     };
-
     // 判斷輸入事項欄位是否為空值
     if (input.value.trim() === "") {
         Swal.fire("請輸入待辦事項");
@@ -26,7 +26,6 @@ btn_add.addEventListener("click", function (e) {
         todoArray.push(todoObject);
         showLists(todoArray);
     };
-
     // 新增完事件後回到"全部"以檢視內容的變更
     const activeTeb = document.querySelector(".active");
     if (activeTeb.innerText !== "全部") {
@@ -94,18 +93,20 @@ list.addEventListener("click", function (e) {
         // 取得尚未完成數量
         let isOverCount = todoArray.filter(todo => !todo.isOver).length;
         notOver.innerHTML = `${isOverCount} 個待完成項目`;
-
         // teb在待完成或是已完成的狀態下修改狀態同時修改隱藏顯示
-        if (document.querySelector(".active").innerHTML == "已完成") {
+        if (document.querySelector(".active").innerHTML === "已完成") {
             list.children[overTodoNum].setAttribute("class", "showTodo");
-        } else if (document.querySelector(".active").innerHTML == "待完成") {
+        } else if (document.querySelector(".active").innerHTML === "待完成") {
             list.children[overTodoNum].setAttribute("class", "showTodo");
         }
+    }
+})
 
-        // 點擊刪除
-    } else if (e.target.getAttribute("class") === "delete") {
+// 點擊刪除單筆事項
+list.addEventListener("click", function (e) {
+    if (e.target.getAttribute("class") === "delete") {
         let deleteInex = e.target.getAttribute("data-deleteIndex");
-        if (todoArray[deleteInex].isOver == false) {
+        if (todoArray[deleteInex].isOver === false) {
             Swal.fire({
                 icon: 'error',
                 title: '您尚未完成此事項',
@@ -127,38 +128,34 @@ list.addEventListener("click", function (e) {
     }
 })
 
-
-
-
-
 // 刪除全部事項
 list_footer.addEventListener("click", function (e) {
-    let deleteArr = [];
-    if (e.target.nodeName == "A") {
-        todoArray.forEach(function (item, index) {
-            if (item.isOver == true) {
-                deleteArr.push(index);
+    const deleteArr = [];
+    if (e.target.nodeName !== "A") {
+        return;
+    }
+    // 確認是否存在完成事項
+    if (todoArray.find(todo => todo.isOver === true) === undefined) {
+        Swal.fire("目前尚未有已完成事項");
+    } else {
+        Swal.fire({
+            title: '您確定要刪除全部已完成事項嗎?',
+            showCancelButton: true,
+            confirmButtonText: '確定'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                todoArray.forEach(function(item, index){
+                    if(item.isOver === true){
+                        // 將已完成的事項的index新增到deleteArr的開頭
+                        deleteArr.unshift(index);
+                    }
+                })
+                deleteArr.forEach(function(item){
+                    todoArray.splice(item, 1)
+                })
+                Swal.fire('完成事項皆已刪除', '', 'success')
+                showLists(todoArray);
             }
-        });
-        // 確認是否有已完成事項
-        if (deleteArr.length == 0) {
-            Swal.fire("目前尚未有已完成事項");
-        } else {
-            Swal.fire({
-                title: '您確定要刪除全部已完成事項嗎?',
-                showCancelButton: true,
-                confirmButtonText: '確定'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    todoArray = todoArray.filter(function (item) {
-                        if (item.isOver == false) {
-                            return item;
-                        }
-                    })
-                    showLists(todoArray);
-                    Swal.fire('完成事項皆已刪除', '', 'success')
-                }
-            })
-        }
+        })
     }
 })
